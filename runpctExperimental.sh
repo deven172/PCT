@@ -74,6 +74,12 @@ SCENARIO_FILE="$script_dir/${USECASE}.scenario.txt"
 DEST_DIR="$script_dir/pctrun${USECASE}"
 STATIC_DIR="$DEST_DIR/staticdata"
 
+# Verify that the scenario file exists early so later steps don't fail
+if [[ ! -f $SCENARIO_FILE ]]; then
+  echo "Error: scenario file '$SCENARIO_FILE' not found." >&2
+  exit 1
+fi
+
 log_info "=== PCT Driver starting (usecase=$USECASE, adk-version=$ADK_VERSION${ADK_VERSION_SET:+ (set)}, log-level=$LOG_LEVEL) ==="
 
 # --- Step 0: Schema setup (db-provision override) ---
@@ -90,7 +96,7 @@ fi
 if [[ -n $provision_choice ]]; then
   case $provision_choice in
     1) safe_run "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
+    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
     3) log_info "Using existing DB; skipping schema setup" ;;
   esac
 
@@ -101,7 +107,7 @@ elif prompt_step "0) Setup schema for '$USECASE': initialize, restore, or use ex
   read -rp "Choose [1,2 or 3]: " c
   case $c in
     1) safe_run "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
+    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
     3) log_info "Assuming existing DB; skipping schema setup" ;;
     *) echo "Warning: invalid choice, skipping schema setup." >&2 ;;
   esac

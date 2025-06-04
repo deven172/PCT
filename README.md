@@ -18,7 +18,7 @@ The script expects the following tools to be installed and available in your `PA
 
 It also assumes several helper scripts exist in the same directory:
 
-- `database_init.sh` and `database_restor.sh` – for schema initialization or restoration.
+- `database_init.sh` and `database_restore.sh` – for schema initialization or restoration.
 - `service_start.sh` and `service_scenario_apply.sh` – for starting services and applying scenarios.
 - A scenario description file named `<usecase>.scenario.txt` describing service steps and DB update steps.
 
