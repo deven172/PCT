@@ -1,0 +1,8 @@
+hub
+mq
+keycloak
+trustpair-app
+trustpair-mock
+master-data-spot-server
+sqlserver
+icas-mock

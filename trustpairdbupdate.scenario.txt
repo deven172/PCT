@@ -1,0 +1,4 @@
+hub-db-update
+tenant-db-update
+master-data-spot-server-db-update
+trustpair-db-update
