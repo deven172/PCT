@@ -70,7 +70,7 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${REPO_BASE}/${USECASE}-adk.git"
 REPO_DIR="$script_dir/${USECASE}-adk"
-SCENARIO_FILE="$script_dir/${USECASE}.scenario.txt"
+SCENARIO_FILE="$script_dir/scenarios/${USECASE}.scenario.txt"
 DEST_DIR="$script_dir/pctrun${USECASE}"
 STATIC_DIR="$DEST_DIR/staticdata"
 

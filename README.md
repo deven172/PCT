@@ -20,7 +20,7 @@ It also assumes several helper scripts exist in the same directory:
 
 - `database_init.sh` and `database_restore.sh` – for schema initialization or restoration.
 - `service_start.sh` and `service_scenario_apply.sh` – for starting services and applying scenarios.
-- A scenario description file named `<usecase>.scenario.txt` describing service steps and DB update steps.
+- A scenario description file named `<usecase>.scenario.txt` located in a `scenarios/` directory describing service steps and DB update steps.
 
 These helper files are **not** provided in this repository, so they must be obtained separately for the script to work.
 
@@ -50,7 +50,7 @@ The script will interactively perform the following steps:
 
 1. **Schema setup** – initialize or restore the database schema.
 2. **DB update** – apply update scripts if not skipped.
-3. **Service enablement** – start the services defined in `<usecase>.scenario.txt`.
+3. **Service enablement** – start the services defined in `scenarios/<usecase>.scenario.txt`.
 4. **Docker image retrieval** – pull the appropriate `<usecase>-adk` Docker image.
 5. **Configuration preparation** – clone `<usecase>-adk` from the configured repository, copy configuration files, and create a working directory (`pctrun<usecase>`).
 6. **Static data initialization** – (optional) download the data loader and run `init_staticdata.sh` to seed test data.
