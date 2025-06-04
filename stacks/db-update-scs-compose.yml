@@ -1,0 +1,19 @@
+services:
+  scs-screening-db-update:
+    container_name: scs-screening-db-update
+    image: scs-update:${VERSION_SCS_EXCEPTIONS}
+    labels:
+      service.type: "db"
+      service.description: "dnc"
+    pull_policy: always
+    volumes:
+      - ${PLATFORM_DIR}/scs-update/log:/opt/ion/platform/log
+      - ${PLATFORM_DIR}/scs-update/daemon/DM/LOGS:/opt/ion/platform/daemon/DM/LOGS
+      - ${PLATFORM_DIR}/scs-update/daemon/DM/log_archiver/LOGS:/opt/ion/platform/daemon/DM/log_archiver/LOGS
+    privileged: true
+    env_file:
+      - ${DNC_PACKAGE_DIR}/env-scs-update
+    extra_hosts:
+      - 'dockerci:127.0.0.1'
+    hostname: ${HOSTNAME}
+    stop_grace_period: 3m

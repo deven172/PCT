@@ -1,0 +1,99 @@
+services:
+  filebeat:
+    container_name: filebeat
+    image: graudocreg01.reval.com:8092/elastic/filebeat:${VERSION_FILEBEAT}
+    command: "${FILEBEAT_COMMAND}"
+    restart: unless-stopped
+    user: root
+    depends_on:
+      logstash:
+        condition: service_healthy   
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      service.type: "monitor"
+      service.description: "filebeat"
+      io.portainer.accesscontrol.teams: Dev
+      io.portainer.accesscontrol.ownership: restricted
+    volumes:
+      - ${BEAT_CONFIGDIR}/filebeat/beat.d:/usr/share/filebeat/beat.d
+      - /mnt/docker-data/containers:/var/lib/docker/containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PLATFORM_DIR:-/dev/null}:/opt/ion/platform
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 20m
+        max-file: 10
+    healthcheck:
+      test: "curl -sSf http://localhost:5800/stats || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 30s  
+      retries: 5
+  metricbeat:
+    container_name: metricbeat
+    image: graudocreg01.reval.com:8092/elastic/metricbeat:${VERSION_METRICBEAT}
+    command: metricbeat -e -strict.perms=false
+    restart: unless-stopped
+    user: root
+    depends_on:
+      logstash:
+        condition: service_healthy   
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      service.type: "monitor"
+      service.description: "metricbeat"
+      io.portainer.accesscontrol.teams: Dev
+      io.portainer.accesscontrol.ownership: restricted
+    volumes:
+      - ${BEAT_CONFIGDIR}/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
+      - ${BEAT_CONFIGDIR}/metricbeat/modules.d:/usr/share/metricbeat/modules.d
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup
+      - /proc:/hostfs/proc
+      - /:/hostfs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 20m
+        max-file: 10
+    healthcheck:
+      test: "curl -sSf http://localhost:5801/stats || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+  logstash:
+    container_name: logstash
+    image: graudocreg01.reval.com:8092/opensearchproject/logstash-oss-with-opensearch-output-plugin:${VERSION_LOGSTASH}
+    restart: unless-stopped
+    user: root
+    hostname: ${LOGSTASH_HOSTNAME}
+    command: logstash
+    labels:
+      service.type: "monitor"
+      service.description: "logstash"
+      io.portainer.accesscontrol.teams: Dev
+      io.portainer.accesscontrol.ownership: restricted
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+      - "5544:5544"
+      - "5545:5545"
+    volumes:
+      - ${BEAT_CONFIGDIR}/logstash/pipeline:/usr/share/logstash/pipeline
+      - ${BEAT_CONFIGDIR}/logstash/config:/usr/share/logstash/config
+      - ${BEAT_CONFIGDIR}/logstash/security:/usr/share/logstash/security
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 20m
+        max-file: 10
+    healthcheck:
+      test: "curl -sSf http://localhost:9600 || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 201s  
+      retries: 5

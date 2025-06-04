@@ -1,0 +1,62 @@
+include:
+  - sqlserver-compose.yml
+services:
+  keycloak:
+    container_name: keycloak
+    labels:
+      service.type: "app"
+      service.description: "keycloak"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8080:8080"
+      - "8443:8443"  
+    build:
+      context: ../
+      dockerfile_inline: |
+        FROM graudocreg01.reval.com:8092/reval/itg-keycloak:${VERSION_KEYCLOAK}
+        ADD ${KEYCLOAK_INIT}  /opt/keycloak/data/import/hub-realm.json
+        ADD ${KEYCLOAK_UI_INIT}  /opt/keycloak/data/import/ebics-ui-realm.json
+        RUN curl -o /opt/keycloak/providers/auth-keycloak-server-itg.jar http://repograz.reval.com:8082/artifactory/gradle-release-local/com/reval/auth-keycloak-server-quarkus/${VERSION_AUTHKEYCLOAKEAR}/auth-keycloak-server-quarkus-${VERSION_AUTHKEYCLOAKEAR}.jar
+        RUN cp /opt/keycloak/lib/lib/deployment/org.jboss.jandex-*.jar /opt/keycloak/providers 
+        WORKDIR /opt/keycloak
+    command: ['start-dev','--log-console-output=json','--db=mssql','--import-realm']
+    environment:
+      KC_METRICS_ENABLE: true
+      KC_FEATURES: token-exchange
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+#      ENV KC_HOSTNAME: ${hostName}
+#      ENV HOSTNAME: ${hostName}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_URL: ${KEYCLOAK_DB_JDBC_URL}
+    configs:
+      - source: keycloak.conf
+        target: /opt/keycloak/conf/keycloak.conf						
+      - source: quarkus.properties
+        target: /opt/keycloak/conf/quarkus.properties
+    restart: unless-stopped
+    healthcheck:
+      test: "curl --fail --noproxy '*' --silent http://127.0.0.1:8080/auth/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20
+configs:
+  keycloak.conf:
+    content: |
+        db=mssql
+        http-relative-path=/auth
+        transaction-xa-enabled=false
+    #https-key-store-password=${props['keycloak-https-keystore-password']}
+  quarkus.properties:
+    content: |
+      quarkus.datasource.HubDS.db-kind=mssql
+      quarkus.datasource.HubDS.jdbc.url=${KEYCLOAK_HUB_DB_JDBC_URL}
+      quarkus.datasource.HubDS.username=${KEYCLOAK_HUB_DB_USERNAME}
+      quarkus.datasource.HubDS.password=${KEYCLOAK_HUB_DB_PASSWORD}
+      quarkus.transaction-manager.default-transaction-timeout=3600000

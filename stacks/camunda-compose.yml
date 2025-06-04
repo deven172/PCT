@@ -1,0 +1,91 @@
+volumes:
+  cwplugins:
+    driver: local # Define the driver and options under the volume name
+    driver_opts:
+      type: none
+      device: ${CAMUNDA_WORKER_PLUGINS_DIR} 
+      o: bind    
+services:
+  camunda-engine-server:
+    container_name: camunda-engine-server
+    image: graudocreg01.reval.com:8092/reval/camunda-engine-server:${VERSION_CAMUNDA_ENGINE_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "camunda"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${CAMUNDA_CONFIG_DIR}:/app/itsconfig
+    ports:
+      - 8091:8080
+      - 8092:8081
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20
+  camunda-worker-server:
+    container_name: camunda-worker-server
+    image: graudocreg01.reval.com:8092/reval/camunda-worker-server:${VERSION_CAMUNDA_WORKER_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "camunda"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${CAMUNDA_CONFIG_DIR}:/app/itsconfig
+      - ${CAMUNDA_WORKER_PLUGINS_DIR}:/app/cwplugins
+    ports:
+      - "8093:8079"
+    # the following does not work due to https://github.com/docker/compose/issues/7188
+    # workaround to have multiple instances is to duplicate the block and configrue a second service (see readme)
+    # - "xxxx-xxxx:8079"
+    #deploy:
+    #  replicas: 2
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8079/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20
+    depends_on:
+      camunda-engine-server:
+        condition: service_healthy     
+  camunda-apps-server:
+    container_name: camunda-apps-server
+    image: graudocreg01.reval.com:8092/reval/camunda-apps-server:${VERSION_CAMUNDA_APPS_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "camunda"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${CAMUNDA_CONFIG_DIR}:/app/itsconfig
+    ports:
+      - 8094:8285
+      - 8109:8286	  
+    healthcheck:
+      test: "(wget --no-verbose --no-check-certificate --tries=1 --spider http://localhost:8286/actuator/health  --no-check-certificate || wget --no-verbose --no-check-certificate --tries=1 --spider http://localhost:8285/actuator/health || exit 1)"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20
+    depends_on:
+      camunda-engine-server:
+        condition: service_healthy
+  camunda-deploy-server:
+    container_name: camunda-deploy-server
+    image: graudocreg01.reval.com:8092/reval/camunda-deploy-server:${VERSION_CAMUNDA_DEPLOY_SERVER}
+    labels:
+      service.type: "data"
+      service.description: "camunda"
+    pull_policy: always
+    volumes:
+      - ${CAMUNDA_CONFIG_DIR}:/app/itsconfig
+    depends_on:
+      camunda-engine-server:
+        condition: service_healthy

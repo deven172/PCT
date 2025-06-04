@@ -1,0 +1,86 @@
+services:
+  hub:
+    container_name: hub
+    image: graudocreg01.reval.com:8092/reval/hub-server:${VERSION_HUB}
+    labels:
+      service.type: "app"
+      service.description: "hub"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8282:8282"
+      - "8822:8822"
+    volumes:
+      - ${HUB_CONFIGDIR}:/app/itsconfig
+      - ${HUB_API}:/app/hubapi
+    restart: unless-stopped
+    healthcheck:
+      test: "(wget --no-verbose --tries=1 --spider https://localhost:8282/actuator/health  --no-check-certificate || wget --no-verbose --tries=1 --spider http://localhost:8282/actuator/health) || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20 
+  hub-internal:
+    container_name: hub-internal
+    profiles: ["sharedenv"]
+    image: graudocreg01.reval.com:8092/reval/hub-server:${VERSION_HUB}
+    labels:
+      service.type: "app"
+      service.description: "hub"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8281:8282"
+    volumes:
+      - ${HUB_INTERNAL_CONFIGDIR}:/app/itsconfig
+      - ${HUB_INTERNAL_API}:/app/hubapi
+    restart: unless-stopped
+    healthcheck:
+      test: "(wget --no-verbose --tries=1 --spider https://localhost:8282/actuator/health  --no-check-certificate || wget --no-verbose --tries=1 --spider http://localhost:8282/actuator/health) || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20      
+  scheduler:
+    container_name: scheduler
+    image: graudocreg01.reval.com:8092/reval/scheduler-server:${VERSION_SCHEDULER}
+    labels:
+      service.type: "app"
+      service.description: "hub"
+    pull_policy: always
+    ports:
+      - "58283:58283"
+    volumes:
+      - ${HUB_CONFIGDIR}:/app/itsconfig
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8382/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s  
+      retries: 5
+  mq:
+    container_name: mq
+    image: graudocreg01.reval.com:8092/reval/mqbroker:${VERSION_MQ}
+    labels:
+      service.type: "app"
+      service.description: "mq"
+    pull_policy: always
+    hostname: ${HOSTNAME}
+    user: "${COMPOSE_UID}:${COMPOSE_GID}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "61616:61616"
+      - "61618:61618"
+    volumes:
+      - ${HUB_CONFIGDIR}:/app/itsconfig
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:61618/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20

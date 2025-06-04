@@ -1,0 +1,24 @@
+include:
+  - sqlserver-compose.yml
+services:  
+  admin-ui:
+    container_name: admin-ui
+    image: graudocreg01.reval.com:8092/reval/itg-admin-ui:${VERSION_ADMIN_UI}
+    labels:
+      service.type: "app"
+      service.description: "adminui"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    ports:
+      - "8076:8076"
+      - "58076:58076"
+    volumes:
+      - ${UI_CONFIGDIR}:/app/itsconfig
+    restart: unless-stopped
+    healthcheck:
+      test: "(wget --no-verbose --tries=1 --spider https://localhost:8076/monitor/actuator/health  --no-check-certificate || wget --no-verbose --tries=1 --spider http://localhost:8076/monitor/actuator/health) || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s  
+      retries: 20

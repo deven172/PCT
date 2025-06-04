@@ -1,0 +1,7 @@
+services:
+  msg-transformation-base:
+    image: suite-ci.iongroup.com:5005/dnc_bank_connectivity_phase_2_ro:${VERSION_MSG_TRANSFORMATION}
+    pull_policy: always
+  dnc-db-update-base:
+    image: suite-ci.iongroup.com:5005/dnc_bank_connectivity_phase_2:${VERSION_MSG_TRANSFORMATION}
+    pull_policy: always

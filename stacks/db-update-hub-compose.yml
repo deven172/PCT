@@ -1,0 +1,70 @@
+services:
+  hub-db-update:
+    container_name: hub-db-update
+    image: graudocreg01.reval.com:8092/reval/hub-db-update:${VERSION_HUB}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_HUB}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_HUB}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_HUB}
+  scheduler-db-update:
+    container_name: scheduler-db-update
+    image: graudocreg01.reval.com:8092/reval/scheduler-db-update:${VERSION_SCHEDULER}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SCHEDULER}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SCHEDULER}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SCHEDULER}
+  mq-db-update:
+    container_name: mq-db-update
+    image: graudocreg01.reval.com:8092/reval/mq-db-update:${VERSION_MQ}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_MQ}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_MQ}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_MQ} 
+  auth-db-update:
+    container_name: auth-db-update
+    image: graudocreg01.reval.com:8092/reval/auth-db-update:${VERSION_AUTH}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_HUB_AUTH}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_HUB_AUTH}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_HUB_AUTH}
+    depends_on:
+      hub-db-update:
+        condition: service_completed_successfully
+  tenant-db-update:
+    container_name: tenant-db-update
+    image: graudocreg01.reval.com:8092/reval/tenant-db-update:${VERSION_TENANT}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_HUB_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_HUB_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_HUB_CDS}
+  business-event-api-db-update:
+    container_name: business-event-api-db-update
+    image: graudocreg01.reval.com:8092/reval/business-event-api-db-update:${VERSION_BUSINESS_EVENT_API}
+    labels:
+      service.type: "db"
+      service.description: "hub"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_HUB_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_HUB_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_HUB_CDS}

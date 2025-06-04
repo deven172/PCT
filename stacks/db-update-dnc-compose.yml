@@ -1,0 +1,20 @@
+services:
+  msg-transformation-db-update:
+    container_name: msg-transformation-db-update
+    image: dnc-update:${VERSION_MSG_TRANSFORMATION}
+    labels:
+      service.type: "db"
+      service.description: "dnc"
+    pull_policy: always
+    volumes:
+      - ${PLATFORM_DIR}/dnc-update/log:/opt/ion/platform/log
+      - ${PLATFORM_DIR}/dnc-update/daemon/DM/LOGS:/opt/ion/platform/daemon/DM/LOGS
+      - ${PLATFORM_DIR}/dnc-update/daemon/DM/log_archiver/LOGS:/opt/ion/platform/daemon/DM/log_archiver/LOGS
+      - ${DNC_PACKAGE_DIR}/itg-data-package-build:/autoconfX/latest/data/itg-data-package
+    privileged: true
+    env_file:
+      - ${DNC_PACKAGE_DIR}/env-dnc-update
+    extra_hosts:
+      - 'dockerci:127.0.0.1'
+    hostname: ${HOSTNAME}
+    stop_grace_period: 3m

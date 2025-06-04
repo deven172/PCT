@@ -1,0 +1,12 @@
+services:
+  admin-ui-db-update:
+    container_name: admin-ui-db-update
+    image: graudocreg01.reval.com:8092/reval/itg-admin-ui-db-update:${VERSION_ADMIN_UI}
+    labels:
+      service.type: "db"
+      service.description: "adminui"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_ADMIN_UI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_ADMIN_UI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_ADMIN_UI}

@@ -1,0 +1,13 @@
+#Defines all the containers needed to run trustpair usecase
+hub-db-update
+tenant-db-update
+master-data-spot-server-db-update
+trustpair-db-update
+hub
+mq
+keycloak
+trustpair-app
+trustpair-mock
+master-data-spot-server
+sqlserver
+icas-mock

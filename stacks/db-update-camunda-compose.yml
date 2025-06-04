@@ -1,0 +1,45 @@
+services:
+  cancellation-db-update:
+    container_name: cancellation-db-update
+    image: graudocreg01.reval.com:8092/reval/cancellation-db-update:${VERSION_CANCELLATION}
+    labels:
+      service.type: "db"
+      service.description: "camunda"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+  journal-db-update:
+    container_name: journal-db-update
+    image: graudocreg01.reval.com:8092/reval/journal-db-update:${VERSION_JOURNAL}
+    labels:
+      service.type: "db"
+      service.description: "camunda"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+  business-event-api-db-update:
+    container_name: business-event-api-db-update
+    image: graudocreg01.reval.com:8092/reval/business-event-api-db-update:${VERSION_BUSINESS_EVENT_API}
+    labels:
+      service.type: "db"
+      service.description: "camunda"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+  camunda-engine-server-db-update:
+    container_name: camunda-engine-server-db-update
+    image: graudocreg01.reval.com:8092/reval/camunda-engine-db-update:${VERSION_CAMUNDA_ENGINE_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "camunda"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CAMUNDA_ENGINE}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CAMUNDA_ENGINE}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CAMUNDA_ENGINE}

@@ -1,0 +1,10 @@
+services:
+  scs-screening-base:
+    image: suite-ci.iongroup.com:5005/dnc_bank_connectivity_phase_2_ro:${VERSION_SCS_SCREENING}
+    pull_policy: always
+  scs-exceptions-base:
+    image: suite-ci.iongroup.com:5005/dnc_bank_connectivity_phase_2:${VERSION_SCS_EXCEPTIONS}
+    pull_policy: always
+  scs-db-update-base:
+    image: suite-ci.iongroup.com:5005/dnc_bank_connectivity_phase_2:${VERSION_SCS_EXCEPTIONS}
+    pull_policy: always

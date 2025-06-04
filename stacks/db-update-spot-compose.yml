@@ -1,0 +1,155 @@
+services:
+  ebics-server-db-update:
+    container_name: ebics-server-db-update
+    image: graudocreg01.reval.com:8092/reval/ebics-db-update:${VERSION_EBICS_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_EBICS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_EBICS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_EBICS}
+  banking-api-citi-server-db-update:
+    container_name: banking-api-citi-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-citi-db-update:${VERSION_BANKING_API_CITI_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CITIAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CITIAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CITIAPI}
+  itg-api-server-db-update:
+    container_name: itg-api-server-db-update
+    image: graudocreg01.reval.com:8092/reval/itg-api-db-update:${VERSION_ITG_API_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_ITGAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_ITGAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_ITGAPI}
+  banking-api-bofa-server-db-update:
+    container_name: banking-api-bofa-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-bofa-db-update:${VERSION_BANKING_API_BOFA_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_BOFAAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_BOFAAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_BOFAAPI}
+  dnc-adapter-server-db-update:
+    container_name: dnc-adapter-server-db-update
+    image: graudocreg01.reval.com:8092/reval/dnc-adapter-db-update:${VERSION_DNC_ADAPTER_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_DNCADAPTER}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_DNCADAPTER}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_DNCADAPTER}
+  master-data-spot-server-db-update:
+    container_name: master-data-spot-server-db-update
+    image: graudocreg01.reval.com:8092/reval/master-data-spot-db-update:${VERSION_MASTER_DATA_SPOT_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_MDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_MDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_MDS}
+  banking-api-sftp-server-db-update:
+    container_name: banking-api-sftp-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-sftp-db-update:${VERSION_BANKING_API_SFTP_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_SFTPAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_SFTPAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_SFTPAPI}
+  sanctions-screening-server-db-update:
+    container_name: sanctions-screening-server-db-update
+    image: graudocreg01.reval.com:8092/reval/sanctions-screening-db-update:${VERSION_SANCTIONS_SCREENING_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_SANCTIONSSCREENING}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_SANCTIONSSCREENING}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_SANCTIONSSCREENING}
+  banking-api-ibam-server-db-update:
+    container_name: banking-api-ibam-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-ibam-db-update:${VERSION_BANKING_API_IBAM_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_IBAM}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_IBAM}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_IBAM}
+  banking-api-signature-server-db-update:
+    container_name: banking-api-signature-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-signature-db-update:${VERSION_BANKING_API_SIGNATURE_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_LAU}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_LAU}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_LAU}
+  banking-api-hsbc-server-db-update:
+    container_name: banking-api-hsbc-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-hsbc-db-update:${VERSION_BANKING_API_HSBC_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_HSBCAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_HSBCAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_HSBCAPI}
+  banking-api-opentext-server-db-update:
+    container_name: banking-api-opentext-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-opentext-db-update:${VERSION_BANKING_API_OPENTEXT_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_OPENTEXTAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_OPENTEXTAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_OPENTEXTAPI}
+  banking-api-jpmc-server-db-update:
+    container_name: banking-api-jpmc-server-db-update
+    image: graudocreg01.reval.com:8092/reval/banking-api-jpmc-db-update:${VERSION_BANKING_API_JPMC_SERVER}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_JPMCAPI}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_JPMCAPI}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_JPMCAPI}
+  trustpair-db-update:
+    container_name: trustpair-db-update
+    image: graudocreg01.reval.com:8092/reval/trustpair-db-update:${VERSION_TRUSTPAIR_APP}
+    labels:
+      service.type: "db"
+      service.description: "spot"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_TRUSTPAIR}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_TRUSTPAIR}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_TRUSTPAIR}       

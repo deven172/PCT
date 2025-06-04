@@ -1,0 +1,74 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-20.04
+    container_name: sqlserver
+    labels:
+      service.type: "db"
+      service.description: "sqlserver"
+    pull_policy: always
+    profiles: ["local"]
+    user: root
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=SqlServer2022
+      - MSSQL_PID=Developer
+    ports:
+      - 1433:1433
+    deploy:
+      resources:
+        limits:
+          memory: 6144M
+    volumes:
+      - type: bind
+        source: ${SQLSERVER_DATA}
+        target: /var/opt/mssql/data
+      - type: bind
+        source: ${SQLSERVER_BACKUP}
+        target: /var/opt/mssql/backup
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P SqlServer2022 -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+  sqlserver.configurator:
+    container_name: sqlserver.configurator
+    labels:
+      service.type: "config"
+      service.description: "sqlserver"
+    pull_policy: always
+    profiles: ["init"]
+    image: mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-20.04
+    volumes:
+      - type: bind
+        source: ${SQLSERVER_INIT}
+        target: /docker-entrypoint-initdb.d
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command: >
+      bash -c '/opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P SqlServer2022 -d master -i docker-entrypoint-initdb.d/init.sql;
+               /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P SqlServer2022 -d master -i docker-entrypoint-initdb.d/cn_table_keystore.sql;
+               echo "All done!";'
+  sqlserver.dbrestore:
+    container_name: sqlserver.dbrestore
+    labels:
+      service.type: "config"
+      service.description: "sqlserver"
+    pull_policy: always
+    profiles: ["restore"]
+    image: mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-20.04
+    volumes:
+      - type: bind
+        source: ${SQLSERVER_INIT}
+        target: /docker-entrypoint-initdb.d
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    command: >
+      bash -c 'export DB_NAMES=$SQLSERVER_RESTORE_DBNAMES;
+              /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P SqlServer2022 -d master -i /docker-entrypoint-initdb.d/restore.sql;
+              echo "All done!";'  

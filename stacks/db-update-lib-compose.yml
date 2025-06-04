@@ -1,0 +1,59 @@
+services:
+  cancellation-db-update:
+    container_name: cancellation-db-update
+    image: graudocreg01.reval.com:8092/reval/cancellation-db-update:${VERSION_CANCELLATION}
+    labels:
+      service.type: "db"
+      service.description: "lib"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+  central-datastore-db-update:
+    container_name: central-datastore-db-update
+    image: graudocreg01.reval.com:8092/reval/central-datastore-db-update:${VERSION_CENTRAL_DATASTORE}
+    labels:
+      service.type: "db"
+      service.description: "lib"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+    depends_on:
+      cancellation-db-update:
+        condition: service_completed_successfully
+  auth-db-update:
+    container_name: auth-db-update
+    image: graudocreg01.reval.com:8092/reval/auth-db-update:${VERSION_AUTH}
+    labels:
+      service.type: "db"
+      service.description: "lib"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_AUTH}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_AUTH}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_AUTH}
+  business-event-api-db-update:
+    container_name: business-event-api-db-update
+    image: graudocreg01.reval.com:8092/reval/business-event-api-db-update:${VERSION_BUSINESS_EVENT_API}
+    labels:
+      service.type: "db"
+      service.description: "lib"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}
+  tenant-db-update:
+    container_name: tenant-db-update
+    image: graudocreg01.reval.com:8092/reval/tenant-db-update:${VERSION_TENANT}
+    labels:
+      service.type: "db"
+      service.description: "lib"
+    pull_policy: always
+    environment:
+      LIQUIBASE_COMMAND_URL: ${LIQUIBASE_COMMAND_URL_SPOT_CDS}
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_COMMAND_USERNAME_SPOT_CDS}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_COMMAND_PASSWORD_SPOT_CDS}

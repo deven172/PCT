@@ -1,0 +1,380 @@
+services:
+  ebics-server:
+    container_name: ebics-server
+    image: graudocreg01.reval.com:8092/reval/ebics-server:${VERSION_EBICS_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_ebics.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+      - ${SPOT_CONFIGDIR}/keys:/itsconfig/keys
+    ports:
+      - 8070:8080
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-core-server:
+    container_name: banking-api-core-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-core-server:${VERSION_BANKING_API_CORE_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_BankingApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    ports:
+      - 8081:8080
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  itg-api-server:
+    container_name: itg-api-server
+    image: graudocreg01.reval.com:8092/reval/itg-api-server:${VERSION_ITG_API_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8084:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_ItgApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-bofa-server:
+    container_name: banking-api-bofa-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-bofa-server:${VERSION_BANKING_API_BOFA_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8085:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_BofAApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/uddr_server.p12:/itsconfig/uddr_server.p12
+      - ${SPOT_CONFIGDIR}/uddr_server_truststore.p12:/itsconfig/uddr_server_truststore.p12
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-jpmc-server:
+    container_name: banking-api-jpmc-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-jpmc-server:${VERSION_BANKING_API_JPMC_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_JpmcApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    ports:
+      - 8086:8080
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  dnc-adapter-server:
+    container_name: dnc-adapter-server
+    image: graudocreg01.reval.com:8092/reval/dnc-adapter-server:${VERSION_DNC_ADAPTER_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8087:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_DncAdapter.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+      - ${SPOT_CONFIGDIR}/keys:/itsconfig/keys
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  master-data-spot-server:
+    container_name: master-data-spot-server
+    image: graudocreg01.reval.com:8092/reval/master-data-spot-server:${VERSION_MASTER_DATA_SPOT_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8089:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_MDS.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  uddr-server:
+    container_name: uddr-server
+    image: graudocreg01.reval.com:8092/reval/uddr-server:${VERSION_UDDR_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_UDDR.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/uddr:/uddr
+    ports:
+      - 8090:8080
+      - 8088:8081
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-sftp-server:
+    container_name: banking-api-sftp-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-sftp-server:${VERSION_BANKING_API_SFTP_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8095:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_SftpApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/uddr_server.p12:/itsconfig/uddr_server.p12
+      - ${SPOT_CONFIGDIR}/uddr_server_truststore.p12:/itsconfig/uddr_server_truststore.p12
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-citi-server:
+    container_name: banking-api-citi-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-citi-server:${VERSION_BANKING_API_CITI_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_CitiApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    ports:
+      - 8096:8089
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8089/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  sanctions-screening-server:
+    container_name: sanctions-screening-server
+    image: graudocreg01.reval.com:8092/reval/sanctions-screening-server:${VERSION_SANCTIONS_SCREENING_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8098:8505"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_SanctionsScreening.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+      - ${SPOT_CONFIGDIR}/keys:/itsconfig/keys
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8505/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-ibam-server:
+    container_name: banking-api-ibam-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-ibam-server:${VERSION_BANKING_API_IBAM_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8099:8505"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_Ibam.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8505/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-signature-server:
+    container_name: banking-api-signature-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-signature-server:${VERSION_BANKING_API_SIGNATURE_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8100:8080"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_LAU.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-hsbc-server:
+    container_name: banking-api-hsbc-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-hsbc-server:${VERSION_BANKING_API_HSBC_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8097:8097"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_HsbcApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8097/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  banking-api-opentext-server:
+    container_name: banking-api-opentext-server
+    image: graudocreg01.reval.com:8092/reval/banking-api-opentext-server:${VERSION_BANKING_API_OPENTEXT_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8101:8101"
+    volumes:
+      - ${SPOT_CONFIGDIR}/appconfig_OpenTextApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+    restart: unless-stopped
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8101/actuator/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  trustpair-app:
+    container_name: trustpair-app
+    image: graudocreg01.reval.com:8091/reval/trustpair-app:${VERSION_TRUSTPAIR_APP}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=file:/config/
+      - SERVER_PORT=8105
+      - MANAGEMENT_SERVER_PORT=8080
+      - MANAGEMENT_SERVER_SSL_ENABLED=false
+      - THC_PATH=/actuator/health
+      - THC_PORT=8080
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+    ports:
+      - "9292:9292"
+      - "8105:8105"
+    volumes:
+      - ${SPOT_CONFIGDIR}/application.properties:/config/application.properties
+      - ${SPOT_CONFIGDIR}/keys/:/itsconfig/keys/
+      - ${SPOT_CONFIGDIR}/trustpair-timer-lock:/trustpair-timer-lock
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "/workspace/health-check" ]
+      interval: 20s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+  trace-transformation-server:
+    container_name: trace-transformation-server
+    image: graudocreg01.reval.com:8091/reval/trace-transformation-server:${VERSION_TRACE_TRANSFORMATION_SERVER}
+    labels:
+      service.type: "app"
+      service.description: "spot"
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ${SPOT_CONFIGDIR}/trace/deploy:/trace/deploy
+      - ${SPOT_CONFIGDIR}/appconfig_TraceTransformationApi.xml:/itsconfig/appconfig.xml
+      - ${SPOT_CONFIGDIR}/mssql-jdbc-7.4.1.jre11.jar:/itsconfig/mssql-jdbc-7.4.1.jre11.jar
+      - ${SPOT_CONFIGDIR}/keys/keystore_local.p12:/itsconfig/keys/wss.iongroup.net.p12
+      - ${SPOT_CONFIGDIR}/keys/truststore_local.p12:/itsconfig/keys/uddr_server_truststore.p12
+      - ${SPOT_CONFIGDIR}/keys/traceRuntime.lic:/trace/licence/traceRuntime.lic
+    ports:
+      - 8104:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 20s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
