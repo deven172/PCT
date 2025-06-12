@@ -446,4 +446,9 @@ Fix: Restart the 'Host Network service' (hns) via service dialog (requires admin
 
 Known issues are tracked here: https://jira.reval.com/issues/?filter=47449
 
-Planned enhancements are tracked here: https://jira.reval.com/issues/?filter=47448
+
+## PCT Driver
+
+The existing `runpctExperimental.sh` script now supports non-interactive DPCT or OPCT flows.
+Use `./runpctExperimental.sh --usecase myusecase --version-manifest version.yaml -y` plus optional flags described in `runpctExperimental.sh --help`.
+
