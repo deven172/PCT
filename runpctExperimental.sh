@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 # === Defaults ===
@@ -8,7 +9,8 @@ USECASE=""                             # e.g. "trustpair"
 AUTO_YES=false
 LOG_LEVEL="info"                       # "info" or "verbose"
 DB_PROVISION=""                        # "initialize|i", "dump|d", or "existing|e"
-SKIP_DBUPDATE=false                    # if true, skip Step 1 entirely
+SKIP_DBUPDATE=false                     # if true, skip Step 1 entirely
+ENV_SETUP=false                         # if true, run fetchfiles.sh & configgenerate.sh before Step 0
 REPO_BASE="git@graugitlab01.reval.com:hawaii"
 data_loader_repo="git@graugitlab01.reval.com:reval/itg-data-loader.git"
 data_loader_path="init_staticdata.sh"
@@ -26,6 +28,7 @@ Options:
   -l, --log-level VALUE   'info' (default) or 'verbose'
   --db-provision VALUE    initialize|i, dump|d, or existing|e
   --skip-dbUpdate         If set, step 1 (dbUpdate) is skipped entirely
+  --env-setup             If set, run fetchfiles.sh and configgenerate.sh before Step 0
   -h, --help              Show this help message
 EOF
   exit 0
@@ -54,6 +57,8 @@ while [[ $# -gt 0 ]]; do
       DB_PROVISION="$2"; shift 2;;
     --skip-dbUpdate)
       SKIP_DBUPDATE=true; shift;;
+    --env-setup)
+      ENV_SETUP=true; shift;;
     -h|--help)
       usage;;
     *)
@@ -70,17 +75,85 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${REPO_BASE}/${USECASE}-adk.git"
 REPO_DIR="$script_dir/${USECASE}-adk"
-SCENARIO_FILE="$script_dir/scenarios/${USECASE}.scenario.txt"
+SCENARIO_FILE="$script_dir/${USECASE}.scenario.txt"
 DEST_DIR="$script_dir/pctrun${USECASE}"
 STATIC_DIR="$DEST_DIR/staticdata"
 
-# Verify that the scenario file exists early so later steps don't fail
-if [[ ! -f $SCENARIO_FILE ]]; then
-  echo "Error: scenario file '$SCENARIO_FILE' not found." >&2
-  exit 1
+log_info "=== PCT Driver starting (usecase=$USECASE, adk-version=$ADK_VERSION${ADK_VERSION_SET:+ (set)}, log-level=$LOG_LEVEL) ==="
+
+# --- Pre-flight setup ---
+log_info "--- Running pre-flight checks ---"
+
+# 1) Install Java if missing
+if ! command -v java &>/dev/null; then
+  log_info "Java not found. Installing Java..."
+  if command -v apt-get &>/dev/null; then
+    run_cmd "Installing Java (apt-get)" sudo apt-get update && sudo apt-get install -y default-jdk
+  elif command -v yum &>/dev/null; then
+    run_cmd "Installing Java (yum)" sudo yum install -y java-11-openjdk-devel
+  else
+    echo "No supported package manager found for installing Java." >&2
+    exit 1
+  fi
+else
+  log_info "Java is already installed."
 fi
 
-log_info "=== PCT Driver starting (usecase=$USECASE, adk-version=$ADK_VERSION${ADK_VERSION_SET:+ (set)}, log-level=$LOG_LEVEL) ==="
+# 2) Install unzip
+if ! command -v unzip &>/dev/null; then
+  log_info "unzip not found. Installing unzip..."
+  if command -v apt-get &>/dev/null; then
+    run_cmd "Installing unzip (apt-get)" sudo apt-get install -y unzip
+  elif command -v yum &>/dev/null; then
+    run_cmd "Installing unzip (yum)" sudo yum install -y unzip
+  else
+    echo "No supported package manager found for installing unzip." >&2
+    exit 1
+  fi
+else
+  log_info "unzip is already installed."
+fi
+
+# 3) Generate SSH key if missing
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+if [[ ! -f ~/.ssh/id_rsa ]]; then
+  log_info "Generating SSH key in ~/.ssh/id_rsa..."
+  ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
+else
+  log_info "SSH key already exists at ~/.ssh/id_rsa."
+fi
+
+# 4) Install Groovy if missing
+if ! command -v groovy &>/dev/null; then
+  log_info "Groovy not found. Installing Groovy..."
+  if command -v apt-get &>/dev/null; then
+    run_cmd "Installing Groovy (apt-get)" sudo apt-get install -y groovy
+  elif command -v yum &>/dev/null; then
+    run_cmd "Installing Groovy (yum)" sudo yum install -y groovy
+  else
+    echo "No supported package manager found for installing Groovy." >&2
+    exit 1
+  fi
+else
+  log_info "Groovy is already installed."
+fi
+
+# 5) Ensure JAVA_HOME is set
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  JAVA_PATH="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
+  log_info "Setting JAVA_HOME to $JAVA_PATH"
+  export JAVA_HOME="$JAVA_PATH"
+  echo "export JAVA_HOME=$JAVA_PATH" >> ~/.bashrc
+else
+  log_info "JAVA_HOME is already set to $JAVA_HOME"
+fi
+
+# 6) Optional environment setup
+if [[ "$ENV_SETUP" == true ]]; then
+  log_info "--env-setup flag detected: running fetchfiles.sh and configgenerate.sh"
+  run_cmd "Fetching files" bash "$script_dir/setup_fetch_files.sh"
+  run_cmd "Generating config" bash "$script_dir/config_generate.sh"
+fi
 
 # --- Step 0: Schema setup (db-provision override) ---
 provision_choice=""
@@ -96,7 +169,7 @@ fi
 if [[ -n $provision_choice ]]; then
   case $provision_choice in
     1) safe_run "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
+    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
     3) log_info "Using existing DB; skipping schema setup" ;;
   esac
 
@@ -107,7 +180,7 @@ elif prompt_step "0) Setup schema for '$USECASE': initialize, restore, or use ex
   read -rp "Choose [1,2 or 3]: " c
   case $c in
     1) safe_run "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
+    2) safe_run "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
     3) log_info "Assuming existing DB; skipping schema setup" ;;
     *) echo "Warning: invalid choice, skipping schema setup." >&2 ;;
   esac
