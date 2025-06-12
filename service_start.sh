@@ -1,14 +1,27 @@
-#!/bin/bash
-if [ $# -eq 0 ]
-  then
-	echo "--------------------------------------------------------------------"
-	echo "                           Start Compose                            "
-	echo "--------------------------------------------------------------------"
-	echo "Please provide stack name(s) to start (space-separated) as parameter" 
-	exit 1
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+echo "--------------------------------------------------------------------"
+echo "                           Start Compose                            "
+echo "--------------------------------------------------------------------"
+echo "Please provide stack name(s) to start (space-separated) as parameter"
+exit 1
 fi
 
-composeFiles=""
+command -v docker >/dev/null || {
+echo "Error: 'docker' command not found" >&2
+exit 1
+}
+
+command -v groovy >/dev/null || {
+echo "Error: 'groovy' command not found" >&2
+exit 1
+}
+
+[[ -f app.env ]] || { echo "Error: required file 'app.env' not found" >&2; exit 1; }
+
+composeFiles=()
 for component in "$@"
 do
 	if [ "$component" == 'dnc' ] || [ "$component" == 'scs' ]
@@ -34,15 +47,22 @@ do
 		fi
 	fi
 
-	composeFiles+=" -f stacks/$component-compose.yml"
-	if [ -e "stacks/$component-compose-disable.yml" ]
-	then
-		composeFiles+=" -f stacks/$component-compose-disable.yml"
-	fi
+       if [[ ! -f "stacks/$component-compose.yml" ]]; then
+               echo "Error: stacks/$component-compose.yml not found" >&2
+               exit 1
+       fi
+       composeFiles+=("-f" "stacks/$component-compose.yml")
+        if [ -e "stacks/$component-compose-disable.yml" ]
+        then
+               composeFiles+=("-f" "stacks/$component-compose-disable.yml")
+        fi
 	
 done
 
-docker compose --env-file=app.env --profile local $composeFiles up -d --wait
+if ! docker compose --env-file=app.env --profile local "${composeFiles[@]}" up -d --wait; then
+    echo "Error: docker compose failed" >&2
+    exit 1
+fi
 
 # Optional step to import dev cert to dnc-adapter, scs-adapter spot
 for component in "$@"
