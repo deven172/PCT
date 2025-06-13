@@ -14,6 +14,15 @@ ENV_SETUP=false                         # if true, run fetchfiles.sh & configgen
 REPO_BASE="git@graugitlab01.reval.com:hawaii"
 data_loader_repo="git@graugitlab01.reval.com:reval/itg-data-loader.git"
 data_loader_path="init_staticdata.sh"
+TRIGGER_SYNC=false
+
+HUB_BASE_URL="http://localhost:8282/hub"
+HUB_TOKEN_ENDPOINT="/auth/realms/hub-internal/protocol/openid-connect/token"
+HUB_SYNC_ENDPOINT="/admin/api/v1/hubadmin/icas/synctenants"
+
+HUB_CLIENT_ID="admin_ui_client"
+HUB_CLIENT_SECRET="tH4vqOcWEzXTNDtrFKQRqoAGp3bA08lL"
+HUB_GRANT_TYPE="client_credentials"
 
 usage() {
   cat <<EOF
@@ -29,6 +38,7 @@ Options:
   --db-provision VALUE    initialize|i, dump|d, or existing|e
   --skip-dbUpdate         If set, step 1 (dbUpdate) is skipped entirely
   --env-setup             If set, run fetchfiles.sh and configgenerate.sh before Step 0
+  -T, --teneant-sync	  If set triggers the icas/synctenants
   -h, --help              Show this help message
 EOF
   exit 0
@@ -41,6 +51,9 @@ safe_run()   { echo ">>> $1"; shift; set +e; "$@"; rc=$?; set -e; ((rc)) && echo
 run_pushd()  { pushd "$1" &>/dev/null; }
 run_popd()   { popd &>/dev/null; }
 log_info()   { echo "$1"; }
+log_verbose() {
+  [[ "$LOG_LEVEL" == "verbose" ]] && echo "[VERBOSE] $1"
+}
 
 # --- Parse flags ---
 while [[ $# -gt 0 ]]; do
@@ -59,6 +72,8 @@ while [[ $# -gt 0 ]]; do
       SKIP_DBUPDATE=true; shift;;
     --env-setup)
       ENV_SETUP=true; shift;;
+	-T|--teneant-sync)
+	TRIGGER_SYNC=true; shift ;;  
     -h|--help)
       usage;;
     *)
@@ -154,6 +169,63 @@ if [[ "$ENV_SETUP" == true ]]; then
   run_cmd "Fetching files" bash "$script_dir/setup_fetch_files.sh"
   run_cmd "Generating config" bash "$script_dir/config_generate.sh"
 fi
+
+get_hub_token() {
+  for cmd in curl jq; do
+    command -v "$cmd" >/dev/null || {
+      echo "Error: '$cmd' is required for tenant-sync" >&2
+      return 1
+    }
+  done
+
+  local curl_cmd="curl -sSf -X POST \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d client_id=${HUB_CLIENT_ID} \
+    -d client_secret=${HUB_CLIENT_SECRET} \
+    -d grant_type=${HUB_GRANT_TYPE} \
+    ${HUB_BASE_URL}${HUB_TOKEN_ENDPOINT}"
+
+  log_verbose "⇢ ${curl_cmd}" >&2
+  HUB_TOKEN=$(eval "$curl_cmd" | jq -er '.access_token') || {
+    echo "Error: access_token not found" >&2
+    return 1
+  }
+}
+
+sync_tenants() {
+  [[ -z $HUB_TOKEN ]] && { echo "Error: empty token" >&2; return 1; }
+
+  local curl_cmd="curl -sS -o /tmp/sync_resp -w '%{http_code}' \
+    -H 'Authorization: Bearer ${HUB_TOKEN}' \
+    ${HUB_BASE_URL}${HUB_SYNC_ENDPOINT}"
+
+  log_verbose "⇢ ${curl_cmd}"
+  local http_code
+  http_code=$(eval "$curl_cmd") || return 1
+
+  if [[ $http_code != 200 ]]; then
+    echo "Sync-tenants call failed (HTTP $http_code)" >&2
+    cat /tmp/sync_resp >&2
+    return 1
+  fi
+
+  echo "✔ Tenants synchronised (HTTP 200)"
+}
+
+# --- Optional tenant-sync trigger ---
+if $TRIGGER_SYNC; then
+  log_info ">>> Triggering tenant sync via Hub Admin API"
+  set +e
+    get_hub_token || true
+    sync_tenants
+    rc=$?
+  set -e
+  ((rc)) && echo "Warning: tenant-sync failed (code $rc), continuing…" >&2
+fi
+
+
+
+
 
 # --- Step 0: Schema setup (db-provision override) ---
 provision_choice=""
