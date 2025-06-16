@@ -1,6 +1,9 @@
 #!/bin/sh
 echo "setting up DevBox folder structure"
-rm -rf *.sh *.ps1
+for f in *.sh *.ps1; do
+  [[ $f == "runPCT.sh" ]] && continue
+  rm -f -- "$f"
+done
 git ls-remote git@gitgraz.reval.com:reval-devops/itg-deployment master | cut -f1 > version.txt
 git archive --format=tar --remote git@gitgraz.reval.com:reval-devops/itg-deployment.git master:shared/compose |tar xf -
 mkdir -p templates
