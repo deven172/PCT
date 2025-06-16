@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-# Don’t auto‐exit on failures, but still treat unset vars and pipe errors as fatal
+# Don’t auto-exit on failures, but still treat unset vars and pipe errors as fatal
 set -uo pipefail
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/helper/common.sh"
 
 PROMPT_ON_ERROR=false
 while [[ $# -gt 0 ]]; do
@@ -35,15 +37,11 @@ error_handler() {
 trap 'error_handler $LINENO' ERR
 
 # === Defaults ===
-ADK_VERSION="latest"                   # etc...
-
-
-# === Defaults ===
 ADK_VERSION="latest"                   # Docker image tag for <usecase>-adk
 ADK_VERSION_SET=false                  # turned on if user passed -v/--adk-version
 USECASE=""                             # e.g. "trustpair"
 AUTO_YES=false
-LOG_LEVEL="info"                       # "info" or "verbose"
+LOG_LEVEL="info"                       # "quiet", "info" or "verbose"
 DB_PROVISION=""                        # "initialize|i", "dump|d", or "existing|e"
 SKIP_DBUPDATE=false                     # if true, skip Step 1 entirely
 ENV_SETUP=false                         # if true, run fetchfiles.sh & configgenerate.sh before Step 0
@@ -70,7 +68,7 @@ Options:
   -u, --usecase           Name of the usecase (required)
   -v, --adk-version VALUE ADK Docker image tag (default: "latest")
   -y, --yes               Automatically accept all prompts
-  -l, --log-level VALUE   'info' (default) or 'verbose'
+  -l, --log-level VALUE   'quiet', 'info' (default) or 'verbose'
   --db-provision VALUE    initialize|i, dump|d, or existing|e
   --skip-dbUpdate         If set, step 1 (dbUpdate) is skipped entirely
   --env-setup             If set, run fetchfiles.sh and configgenerate.sh before Step 0
@@ -82,27 +80,21 @@ EOF
 
 # --- Helpers ---
 prompt_step() { $AUTO_YES && return 0; read -rp "$1 [y/N]: " c; [[ $c =~ ^[Yy]$ ]]; }
-run_cmd() {
-  echo "$1"
-  shift
-  if [[ $LOG_LEVEL == verbose ]]; then
-    "$@"
-    rc=$?
-  else
-    "$@" &>/dev/null
-    rc=$?
-  fi
-  if (( rc )); then
-    echo "⚠️  Error: '$1' failed with exit code $rc"
-  fi
-  return $rc
-}
 
-run_pushd()  { pushd "$1" &>/dev/null; }
-run_popd()   { popd &>/dev/null; }
-log_info()   { echo "$1"; }
-log_verbose() {
-  [[ "$LOG_LEVEL" == "verbose" ]] && echo "[VERBOSE] $1"
+ensure_cmd() {
+  local cmd=$1 apt_pkg=$2 yum_pkg=$3
+  if ! command -v "$cmd" &>/dev/null; then
+    log_info "$cmd not found. Installing..."
+    if command -v apt-get &>/dev/null; then
+      run_cmd "Installing $cmd (apt-get)" sudo apt-get install -y "$apt_pkg"
+    elif command -v yum &>/dev/null; then
+      run_cmd "Installing $cmd (yum)" sudo yum install -y "$yum_pkg"
+    else
+      log_warn "No supported package manager found for installing $cmd"
+    fi
+  else
+    log_verbose "$cmd already installed"
+  fi
 }
 
 # --- Parse flags ---
@@ -137,7 +129,6 @@ if [[ -z $USECASE ]]; then
 fi
 
 # --- Derived paths & URLs ---
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="${REPO_BASE}/${USECASE}-adk.git"
 REPO_DIR="$script_dir/${USECASE}-adk"
 SCENARIO_FILE="$script_dir/scenarios/${USECASE}.scenario.txt"
@@ -149,50 +140,17 @@ log_info "=== PCT Driver starting (usecase=$USECASE, adk-version=$ADK_VERSION${A
 # --- Pre-flight setup ---
 log_info "--- Running pre-flight checks ---"
 
-# 1) Install Java if missing
-if ! command -v java &>/dev/null; then
-  log_info "Java not found. Installing Java..."
-  if command -v apt-get &>/dev/null; then
-    run_cmd "Installing Java (apt-get)" sudo apt-get update && sudo apt-get install -y default-jdk
-  elif command -v yum &>/dev/null; then
-    run_cmd "Installing Java (yum)" sudo yum install -y java-11-openjdk-devel
-  else
-    echo "No supported package manager found for installing Java." >&2
-    exit 1
-  fi
-else
-  log_info "Java is already installed."
-fi
-
-# 2) Install unzip
-if ! command -v unzip &>/dev/null; then
-  log_info "unzip not found. Installing unzip..."
-  if command -v apt-get &>/dev/null; then
-    run_cmd "Installing unzip (apt-get)" sudo apt-get install -y unzip
-  elif command -v yum &>/dev/null; then
-    run_cmd "Installing unzip (yum)" sudo yum install -y unzip
-  else
-    echo "No supported package manager found for installing unzip." >&2
-    exit 1
-  fi
-else
-  log_info "unzip is already installed."
-fi
-
-# 3) Install jq
-if ! command -v jq &>/dev/null; then
-  log_info "jq not found. Installing jq..."
-  if command -v apt-get &>/dev/null; then
-    run_cmd "Installing jq (apt-get)" sudo apt-get install -y jq
-  elif command -v yum &>/dev/null; then
-    run_cmd "Installing jq (yum)" sudo yum install -y jq
-  else
-    echo "No supported package manager found for installing jq." >&2
-    exit 1
-  fi
-else
-  log_info "jq is already installed."
-fi
+# Ensure required tools
+packages=(
+  "java:default-jdk:java-11-openjdk-devel"
+  "unzip:unzip:unzip"
+  "jq:jq:jq"
+  "groovy:groovy:groovy"
+)
+for entry in "${packages[@]}"; do
+  IFS=: read -r cmd apt_pkg yum_pkg <<<"$entry"
+  ensure_cmd "$cmd" "$apt_pkg" "$yum_pkg"
+done
 
 
 # 3) Generate SSH key if missing
@@ -204,22 +162,7 @@ else
   log_info "SSH key already exists at ~/.ssh/id_rsa."
 fi
 
-# 4) Install Groovy if missing
-if ! command -v groovy &>/dev/null; then
-  log_info "Groovy not found. Installing Groovy..."
-  if command -v apt-get &>/dev/null; then
-    run_cmd "Installing Groovy (apt-get)" sudo apt-get install -y groovy
-  elif command -v yum &>/dev/null; then
-    run_cmd "Installing Groovy (yum)" sudo yum install -y groovy
-  else
-    echo "No supported package manager found for installing Groovy." >&2
-    exit 1
-  fi
-else
-  log_info "Groovy is already installed."
-fi
-
-# 5) Ensure JAVA_HOME is set
+# 4) Ensure JAVA_HOME is set
 if [[ -z "${JAVA_HOME:-}" ]]; then
   JAVA_PATH="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
   log_info "Setting JAVA_HOME to $JAVA_PATH"
@@ -292,7 +235,7 @@ fi
 if [[ -n $provision_choice ]]; then
   case $provision_choice in
     1) run_cmd "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) run_cmd "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
+    2) run_cmd "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
     3) log_info "Using existing DB; skipping schema setup" ;;
   esac
 
@@ -303,7 +246,7 @@ elif prompt_step " Setup schema for '$USECASE': initialize, restore, or use exis
   read -rp "Choose [1,2 or 3]: " c
   case $c in
     1) run_cmd "Init new $USECASE schema" bash -c "cd \"$script_dir\" && ./database_init.sh" ;;
-    2) run_cmd "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restor.sh" ;;
+    2) run_cmd "Restore $USECASE schema"   bash -c "cd \"$script_dir\" && ./database_restore.sh" ;;
     3) log_info "Assuming existing DB; skipping schema setup" ;;
     *) echo "Warning: invalid choice, skipping schema setup." >&2 ;;
   esac
@@ -432,3 +375,4 @@ if prompt_step "Cleanup static data after run?"; then
 fi
 
 log_info "=== PCT Driver completed ==="
+
