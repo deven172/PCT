@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -uo pipefail
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/helper/common.sh"
+trap 'log_warn "command failed: $BASH_COMMAND"' ERR
 if [ ! -f version.yml ]; then
 	echo 'no version.yml found, creating one from templates/itg_local.yml'
 	cp templates/version_local.yml version.yml

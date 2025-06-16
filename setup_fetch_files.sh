@@ -1,5 +1,10 @@
-#!/bin/sh
-echo "setting up DevBox folder structure"
+#!/usr/bin/env bash
+set -uo pipefail
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$script_dir/helper/common.sh"
+trap 'log_warn "command failed: $BASH_COMMAND"' ERR
+
+log_info "setting up DevBox folder structure"
 for f in *.sh *.ps1; do
   [[ $f == "runPCT.sh" ]] && continue
   rm -f -- "$f"
