@@ -41,7 +41,7 @@ Below diagram summarises the major steps executed by `runpctExperimental.sh`:
 
 ```mermaid
 flowchart TD
-    A[Start] --> B{Pre-flight checks}\n(install tools)
+    A[Start] --> B{Pre-flight checks\n(install tools)}
     B --> C[Optional env setup]
     C --> D[Step 0: Schema setup]
     D --> E[Step 1: DB update]
